@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
+)
+
+const (
+	TRIE_DEBUG = false
 )
 
 type TrieNode struct {
@@ -112,8 +115,8 @@ func isRangesContainAt(ranges []MatchRange, i int) bool {
 	return false
 }
 
-func DebugPrintState(state *TrieNodeState, text string) {
-	if os.Getenv("DEBUG") != "true" {
+func debugPrintState(state *TrieNodeState, text string) {
+	if !TRIE_DEBUG {
 		return
 	}
 	for i, r := range state.matchRanges {
@@ -160,16 +163,16 @@ func (node *TrieNode) Mask(text string, state *TrieNodeState) (masked string, ma
 	printedPos := 0
 
 	for i, ch := range text {
-		if os.Getenv("DEBUG") == "true" {
+		if TRIE_DEBUG {
 			fmt.Print("Before step: ")
-			DebugPrintState(currentState, text)
+			debugPrintState(currentState, text)
 		}
 
 		currentState = node.step(ch, i, currentState)
 
-		if os.Getenv("DEBUG") == "true" {
+		if TRIE_DEBUG {
 			fmt.Print("After step : ")
-			DebugPrintState(currentState, text)
+			debugPrintState(currentState, text)
 		}
 
 		// if there is no matching node: print all the characters from printedPos to i
