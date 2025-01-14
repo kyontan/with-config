@@ -16,6 +16,9 @@ func TestTrieMask(t *testing.T) {
 		{"my password is strong", "my ******** is strong"},
 		{"should not be masked", "should not be masked"},
 		{"partial match secre", "partial match *****"},
+		{"partial match secretaaa", "partial match ******aaa"},
+		{"partial match secreaaa", "partial match secreaaa"},
+		{"secret", "******"},
 	}
 
 	for _, test := range tests {
