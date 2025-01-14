@@ -127,12 +127,9 @@ func main() {
 			remaining += line
 			masked, remaining, trie_state = trie.Mask(remaining, trie_state)
 			fmt.Print(masked)
-			if len(masked) > 0 {
-				fmt.Print("@")
-			}
 		}
-		// masked := trie.PrintRemaining(remaining, trie_state)
-		// fmt.Print(masked)
+		masked := trie.PrintRemaining(remaining, trie_state)
+		fmt.Print(masked)
 		fmt.Println("EoF: stdout")
 	}()
 
@@ -152,7 +149,7 @@ func main() {
 		}
 		masked := trie.PrintRemaining(remaining, trie_state)
 		fmt.Print(masked)
-		fmt.Println("EoF: stderr")
+		// fmt.Println("EoF: stderr")
 	}()
 
 	wg.Wait()

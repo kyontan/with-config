@@ -69,8 +69,8 @@ func (node *TrieNode) step(c rune, runePosition int, state *TrieNodeState) *Trie
 		if next, exists := currentNode.children[c]; exists {
 			if next.isEnd { // match found
 				newState.matchRanges = append(newState.matchRanges, MatchRange{
-					start:  runePosition - next.position + 1,
-					length: currentNode.position + 1,
+					start:  current.start,
+					length: current.length + 1,
 					node:   nil, // means end of the match
 				})
 			}
@@ -78,8 +78,8 @@ func (node *TrieNode) step(c rune, runePosition int, state *TrieNodeState) *Trie
 			// if next have children, add it to newCurrentNodes
 			if len(next.children) > 0 {
 				newState.matchRanges = append(newState.matchRanges, MatchRange{
-					start:  runePosition - next.position + 1,
-					length: currentNode.position + 1,
+					start:  current.start,
+					length: current.length + 1,
 					node:   next,
 				})
 			}
@@ -87,14 +87,12 @@ func (node *TrieNode) step(c rune, runePosition int, state *TrieNodeState) *Trie
 			// special handling for backslack ("\\") character: keep (append) the last matching node (with new position)
 			if c == '\\' {
 				newState.matchRanges = append(newState.matchRanges, MatchRange{
-					start: current.start - 5,
-					// length: current.node.position + 2,
-					length: runePosition - current.start,
+					start:  current.start,
+					length: current.length + 1,
 					node:   current.node,
 				})
 			}
 		}
-
 	}
 
 	return newState
@@ -110,6 +108,44 @@ func isRangesContainAt(ranges []MatchRange, i int) bool {
 	return false
 }
 
+func DebugPrintState(state *TrieNodeState, text string) {
+	if os.Getenv("DEBUG") != "true" {
+		return
+	}
+	for i, r := range state.matchRanges {
+		if i > 10 {
+			return
+		}
+
+		nodeStr := ""
+		if r.node == nil {
+			nodeStr = "nil"
+		} else {
+			nodeStr = "non-nil"
+		}
+
+		var startChar rune
+		var endChar rune
+		if r.start < 0 {
+			startChar = '?'
+		} else {
+			startChar = rune(text[r.start])
+		}
+
+		if r.start+r.length-1 < 0 {
+			endChar = '?'
+		} else {
+			endChar = rune(text[r.start+r.length-1])
+		}
+
+		fmt.Printf("i: %d, mr: [%c .. %c] (start: %d, len: %d), node: %s\n", i, startChar, endChar, r.start, r.length, nodeStr)
+	}
+
+	if len(state.matchRanges) == 0 {
+		fmt.Printf("No match\n")
+	}
+}
+
 func (node *TrieNode) Mask(text string, state *TrieNodeState) (masked string, matching string, newState *TrieNodeState) {
 	var result strings.Builder
 
@@ -120,7 +156,17 @@ func (node *TrieNode) Mask(text string, state *TrieNodeState) (masked string, ma
 	printedPos := 0
 
 	for i, ch := range text {
+		if os.Getenv("DEBUG") == "true" {
+			fmt.Print("Before step: ")
+			DebugPrintState(currentState, text)
+		}
+
 		currentState = node.step(ch, i, currentState)
+
+		if os.Getenv("DEBUG") == "true" {
+			fmt.Print("After step : ")
+			DebugPrintState(currentState, text)
+		}
 
 		// if there is no matching node: print all the characters from printedPos to i
 		// if there is only newly added nodes, print all the characters from printedPos to i - 1
