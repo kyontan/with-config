@@ -15,7 +15,7 @@ func TestTrieMask(t *testing.T) {
 		{"this is a secret", "this is a ******"},
 		{"my password is strong", "my ******** is strong"},
 		{"should not be masked", "should not be masked"},
-		{"partial match secre", "partial match secre"},
+		{"partial match secre", "partial match *****"},
 	}
 
 	for _, test := range tests {
@@ -39,6 +39,7 @@ func TestTrieMaskDifficult(t *testing.T) {
 		{"this is a secret", "this is a ******"},
 		{"my password is strong", "my password is strong"},
 		{"multiple secrets and password", "multiple ********************"},
+		{"multiple secrets and passwor!", "multiple ******s and passwor!"},
 	}
 
 	for _, test := range tests {
@@ -62,7 +63,7 @@ func TestTrieMaskWithIntermediateState(t *testing.T) {
 		{[]string{"this is a sec", "ret"}, "this is a ******"},
 		{[]string{"my pass", "word is strong"}, "my ******** is strong"},
 		{[]string{"use this to", "ken"}, "use this *****"},
-		{[]string{"partial match sec", "re"}, "partial match secre"},
+		{[]string{"partial match sec", "re"}, "partial match *****"},
 		{[]string{"multiple sec", "ret and pass", "word"}, "multiple ****** and ********"},
 	}
 
@@ -84,7 +85,7 @@ func TestTrieMaskWithIntermediateState(t *testing.T) {
 	}
 }
 
-func TestTrieMaskWithBackslack(t *testing.T) {
+func TestTrieMaskWithBackslash(t *testing.T) {
 	secrets := []string{"\"secret\""}
 	trie := BuildTrieFromSecrets(secrets)
 
@@ -94,6 +95,7 @@ func TestTrieMaskWithBackslack(t *testing.T) {
 	}{
 		{"this is not a secret", "this is not a secret"},
 		{"this is a \"secret\"", "this is a ********"},
+		{"this is also a \\\"secret\"", "this is also a *********"},
 		{"this is also a \\\"secret\\\"", "this is also a **********"},
 	}
 

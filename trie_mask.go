@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"strings"
 )
 
@@ -10,14 +12,14 @@ type TrieNode struct {
 	isEnd    bool
 }
 
-type MatchedRange struct {
+type MatchRange struct {
 	start  int
 	length int
+	node   *TrieNode // if not nil, still matching, otherwise (nil): already matched
 }
 
 type TrieNodeState struct {
-	nodes         []*TrieNode
-	matchedRanges []MatchedRange
+	matchRanges []MatchRange
 }
 
 func NewTrieTree() *TrieNode {
@@ -30,8 +32,7 @@ func NewTrieNode(position int) *TrieNode {
 
 func NewTrieNodeState() *TrieNodeState {
 	return &TrieNodeState{
-		nodes:         []*TrieNode{},
-		matchedRanges: []MatchedRange{},
+		matchRanges: []MatchRange{},
 	}
 }
 
@@ -47,43 +48,62 @@ func (node *TrieNode) Insert(word string) {
 }
 
 func (node *TrieNode) step(c rune, runePosition int, state *TrieNodeState) *TrieNodeState {
-	var newState *TrieNodeState
-	if state == nil {
-		newState = NewTrieNodeState()
-	} else {
-		newState = state
-	}
+	// clone states
+	currentState := NewTrieNodeState()
+	currentState.matchRanges = append(currentState.matchRanges, state.matchRanges...)
 
-	// add root to new state
-	newState.nodes = append(newState.nodes, node)
+	// add root node to current state (match from the beginning)
+	currentState.matchRanges = append(currentState.matchRanges, MatchRange{0, 0, node})
 
-	newCurrentNodes := []*TrieNode{}
-	for _, current := range newState.nodes {
-		if next, exists := current.children[c]; exists {
+	newState := NewTrieNodeState()
+
+	for _, current := range currentState.matchRanges {
+		currentNode := current.node
+
+		// if the current node is nil, keep it
+		if currentNode == nil {
+			newState.matchRanges = append(newState.matchRanges, current)
+			continue
+		}
+
+		if next, exists := currentNode.children[c]; exists {
 			if next.isEnd { // match found
-				newState.matchedRanges = append(newState.matchedRanges, MatchedRange{runePosition - next.position + 1, next.position})
+				newState.matchRanges = append(newState.matchRanges, MatchRange{
+					start:  runePosition - next.position + 1,
+					length: currentNode.position + 1,
+					node:   nil, // means end of the match
+				})
 			}
 
 			// if next have children, add it to newCurrentNodes
 			if len(next.children) > 0 {
-				newCurrentNodes = append(newCurrentNodes, next)
+				newState.matchRanges = append(newState.matchRanges, MatchRange{
+					start:  runePosition - next.position + 1,
+					length: currentNode.position + 1,
+					node:   next,
+				})
+			}
+		} else {
+			// special handling for backslack ("\\") character: keep (append) the last matching node (with new position)
+			if c == '\\' {
+				newState.matchRanges = append(newState.matchRanges, MatchRange{
+					start: current.start - 5,
+					// length: current.node.position + 2,
+					length: runePosition - current.start,
+					node:   current.node,
+				})
 			}
 		}
 
-		// special handling for backslack ("\\") character: keep (append) the last matching node (with new position)
-		if c == '\\' {
-			newCurrentNodes = append(newCurrentNodes, current)
-		}
 	}
-
-	newState.nodes = newCurrentNodes
 
 	return newState
 }
 
-func isRangesContainAt(ranges []MatchedRange, i int) bool {
+// only considers the ranges that have node == nil (already matched)
+func isRangesContainAt(ranges []MatchRange, i int) bool {
 	for _, r := range ranges {
-		if r.start <= i && i < (r.start+r.length) {
+		if r.node == nil && r.start <= i && i < (r.start+r.length) {
 			return true
 		}
 	}
@@ -95,13 +115,7 @@ func (node *TrieNode) Mask(text string, state *TrieNodeState) (masked string, ma
 
 	currentState := NewTrieNodeState()
 
-	currentState.nodes = append(currentState.nodes, state.nodes...)
-	currentState.matchedRanges = append(currentState.matchedRanges, state.matchedRanges...)
-
-	// if startNodes is empty, start from root
-	if len(currentState.nodes) == 0 {
-		currentState.nodes = append(currentState.nodes, node)
-	}
+	currentState.matchRanges = append(currentState.matchRanges, state.matchRanges...)
 
 	printedPos := 0
 
@@ -111,24 +125,26 @@ func (node *TrieNode) Mask(text string, state *TrieNodeState) (masked string, ma
 		// if there is no matching node: print all the characters from printedPos to i
 		// if there is only newly added nodes, print all the characters from printedPos to i - 1
 		// otherwise, do nothing (keep matching)
-		allNodesAreNewlyAdded := true
-		for _, n := range currentState.nodes {
-			if n.position > 1 {
-				allNodesAreNewlyAdded = false
-				break
+		numNewMatchingNodes := 0
+		numExistingMatchingNodes := 0
+		for _, mr := range currentState.matchRanges {
+			if mr.node != nil {
+				if mr.node.position == 0 {
+					numNewMatchingNodes++
+				} else {
+					numExistingMatchingNodes++
+				}
 			}
 		}
 
-		// if no current matching node found, we can print the character
-		if allNodesAreNewlyAdded {
-
+		if numExistingMatchingNodes == 0 {
 			end := i
-			if len(currentState.nodes) > 0 { // if there is under matching, we cannot print the pos i
+			if numNewMatchingNodes > 0 { // if there is under matching, we cannot print the pos i
 				end--
 			}
 
 			for printedPos <= end {
-				if isRangesContainAt(currentState.matchedRanges, printedPos) {
+				if isRangesContainAt(currentState.matchRanges, printedPos) {
 					result.WriteString("*")
 				} else {
 					result.WriteRune(rune(text[printedPos]))
@@ -138,20 +154,20 @@ func (node *TrieNode) Mask(text string, state *TrieNodeState) (masked string, ma
 			}
 
 			// keeps only the ranges that still active
-			newMatchedRanges := []MatchedRange{}
-			for _, r := range currentState.matchedRanges {
+			newMatchRanges := []MatchRange{}
+			for _, r := range currentState.matchRanges {
 				if r.start+r.length > printedPos {
-					newMatchedRanges = append(newMatchedRanges, r)
+					newMatchRanges = append(newMatchRanges, r)
 				}
 			}
 
-			currentState.matchedRanges = newMatchedRanges
+			currentState.matchRanges = newMatchRanges
 		}
 	}
 
-	// shift start of matchedRanges
-	for i := range currentState.matchedRanges {
-		currentState.matchedRanges[i].start -= printedPos
+	// shift start of matchRanges
+	for i := range currentState.matchRanges {
+		currentState.matchRanges[i].start -= printedPos
 	}
 
 	return result.String(), text[printedPos:], currentState
@@ -161,9 +177,9 @@ func (node *TrieNode) PrintRemaining(text string, state *TrieNodeState) string {
 	var result strings.Builder
 
 	for i, ch := range text {
-		if isRangesContainAt(state.matchedRanges, i) {
+		if isRangesContainAt(state.matchRanges, i) {
 			result.WriteString("*")
-		} else if len(state.nodes) != 0 {
+		} else if len(state.matchRanges) != 0 {
 			// maybe the character is a part of a matching secret
 			result.WriteString("*")
 		} else {

@@ -79,6 +79,7 @@ func main() {
 
 	// Build the trie-tree from secret_map values
 	trie := BuildTrieFromSecretsMap(secret_map)
+	// trie := NewTrieTree() // no mask
 
 	// execute command with secret
 	cmd := os.Args[1]
@@ -117,6 +118,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stdout)
+		scanner.Split(bufio.ScanBytes)
 		trie_state := NewTrieNodeState()
 		var remaining string
 		for scanner.Scan() {
@@ -124,14 +126,21 @@ func main() {
 			line := scanner.Text()
 			remaining += line
 			masked, remaining, trie_state = trie.Mask(remaining, trie_state)
-			masked += trie.PrintRemaining(remaining, trie_state)
-			fmt.Println("Output:", masked)
+			fmt.Print(masked)
+			if len(masked) > 0 {
+				fmt.Print("@")
+			}
 		}
+		// masked := trie.PrintRemaining(remaining, trie_state)
+		// fmt.Print(masked)
+		fmt.Println("EoF: stdout")
 	}()
 
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
+		scanner.Split(bufio.ScanBytes)
+
 		trie_state := NewTrieNodeState()
 		var remaining string
 		for scanner.Scan() {
@@ -139,11 +148,14 @@ func main() {
 			line := scanner.Text()
 			remaining += line
 			masked, remaining, trie_state = trie.Mask(remaining, trie_state)
-			masked += trie.PrintRemaining(remaining, trie_state)
-
-			fmt.Println("Output:", masked)
+			fmt.Print(masked)
 		}
+		masked := trie.PrintRemaining(remaining, trie_state)
+		fmt.Print(masked)
+		fmt.Println("EoF: stderr")
 	}()
+
+	wg.Wait()
 
 	if err := command.Wait(); err != nil {
 		fmt.Println("Error: command execution failed")
@@ -151,6 +163,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Wait for all goroutines to finish
-	wg.Wait()
+	fmt.Println("Command executed successfully")
 }
