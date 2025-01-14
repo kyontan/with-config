@@ -53,7 +53,11 @@ func (node *TrieNode) step(c rune, runePosition int, state *TrieNodeState) *Trie
 	currentState.matchRanges = append(currentState.matchRanges, state.matchRanges...)
 
 	// add root node to current state (match from the beginning)
-	currentState.matchRanges = append(currentState.matchRanges, MatchRange{0, 0, node})
+	currentState.matchRanges = append(currentState.matchRanges, MatchRange{
+		start:  runePosition,
+		length: 0,
+		node:   node,
+	})
 
 	newState := NewTrieNodeState()
 
