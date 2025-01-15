@@ -59,7 +59,7 @@ func getConfigMap(namespace, configMapName string) (map[string]string, error) {
 			namespace = "default"
 		}
 
-		fmt.Printf("Namespace not provided. Using the default namespace: %s\n", namespace)
+		// fmt.Printf("Namespace not provided. Using the default namespace: %s\n", namespace)
 	}
 
 	configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configMapName, metav1.GetOptions{})
@@ -75,13 +75,13 @@ func main() {
 	configmap_name := os.Getenv("WITH_CONFIG")
 
 	if configmap_name == "" {
-		fmt.Println("Error: WITH_CONFIG is not set")
+		fmt.Fprintln(os.Stderr, "Error: WITH_CONFIG is not set")
 		PrintUsageAndExit()
 	}
 
 	// check if command is provided
 	if len(os.Args) < 2 {
-		fmt.Println("Error: command is not provided")
+		fmt.Fprintln(os.Stderr, "Error: command is not provided")
 		PrintUsageAndExit()
 	}
 
@@ -90,7 +90,7 @@ func main() {
 
 	configmap_data, err := getConfigMap(namespace, configmap_name)
 	if err != nil {
-		fmt.Println("Error fetching ConfigMap:", err)
+		fmt.Fprintf(os.Stderr, "Error fetching ConfigMap: %+v\n", err)
 		os.Exit(1)
 	}
 
@@ -108,21 +108,18 @@ func main() {
 
 	stdout, err := command.StdoutPipe()
 	if err != nil {
-		fmt.Println("Error: unable to get stdout pipe")
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "Error: unable to get stdout pipe: %+v\n", err)
 		os.Exit(1)
 	}
 
 	stderr, err := command.StderrPipe()
 	if err != nil {
-		fmt.Println("Error: unable to get stderr pipe")
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "Error: unable to get stderr pipe: %+v\n", err)
 		os.Exit(1)
 	}
 
 	if err := command.Start(); err != nil {
-		fmt.Println("Error: unable to start command")
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "Error: unable to start command: %+v\n", err)
 		os.Exit(1)
 	}
 
@@ -153,8 +150,7 @@ func main() {
 	wg.Wait()
 
 	if err := command.Wait(); err != nil {
-		fmt.Println("Error: command execution failed")
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "Error: command execution failed: %+v\n", err)
 		os.Exit(1)
 	}
 }
