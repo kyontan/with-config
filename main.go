@@ -105,6 +105,7 @@ func main() {
 	command := exec.Command(cmd, args...)
 
 	// set environment variables
+	command.Env = os.Environ()
 	for key, value := range configmap_data {
 		command.Env = append(command.Env, key+"="+value)
 	}
