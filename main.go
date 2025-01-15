@@ -13,10 +13,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const (
-	PLAIN_PRINT_FIRST_N_CHARS = 4
-)
-
 func PrintUsageAndExit() {
 	fmt.Println("Usage: with-config command")
 	fmt.Println("  command: command to execute")
@@ -140,7 +136,6 @@ func main() {
 		for scanner.Scan() {
 			fmt.Print(scanner.Text())
 		}
-		fmt.Println("EoF: stdout")
 	}()
 
 	go func() {
@@ -152,8 +147,6 @@ func main() {
 			for scanner.Scan() {
 				fmt.Print(scanner.Text())
 			}
-			fmt.Println("EoF: stdout")
-			// fmt.Println("EoF: stderr")
 		}
 	}()
 
@@ -164,6 +157,4 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	fmt.Println("Command executed successfully")
 }
