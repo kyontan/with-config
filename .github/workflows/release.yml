@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+permissions:
+    contents: write
+    packages: write
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Fetch go version from go.mod
+      id: go-version
+      run: echo version=$(cat go.mod | grep '^go ' | awk '{print $2}') >> $GITHUB_OUTPUT
+    # https://github.com/marketplace/actions/go-release-binaries
+    - uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: "https://dl.google.com/go/go${{ steps.go-version.outputs.version }}.linux-amd64.tar.gz"
+        binary_name: "with-config"
+        compress_assets: "OFF"
