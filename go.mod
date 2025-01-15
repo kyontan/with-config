@@ -1,4 +1,4 @@
-module github.com/kyontan/with-configmap
+module github.com/kyontan/with-config
 
 go 1.23.4
 

@@ -1,14 +1,14 @@
-# with-configmaps
+# with-config
 
 This is a wrapper command to execute command with Kubernetes ConfigMap.
 
 ## Usage
 
 ```console
-$ export WITH_CONFIGMAP=my-configmap-name
-$ with-configmaps my-command
+$ export WITH_CONFIG=my-configmap-name
+$ with-configs my-command
 ```
 
 or you can run simply
-$ WITH_CONFIGMAP=my-configmap with-configmap my-command
+$ WITH_CONFIG=my-configmap with-config my-command
 ```

@@ -18,15 +18,15 @@ const (
 )
 
 func PrintUsageAndExit() {
-	fmt.Println("Usage: with-configmap command")
+	fmt.Println("Usage: with-config command")
 	fmt.Println("  command: command to execute")
 	fmt.Println()
 	fmt.Println("Environment Variables:")
-	fmt.Println("  WITH_CONFIGMAP: Kubernetes ConfigMap name")
+	fmt.Println("  WITH_CONFIG: Kubernetes ConfigMap name")
 	fmt.Println()
 	fmt.Println("Example:")
-	fmt.Println("  $ export WITH_CONFIGMAP=my-configmap")
-	fmt.Println("  $ with-configmap my-command")
+	fmt.Println("  $ export WITH_CONFIG=my-configmap")
+	fmt.Println("  $ with-config my-command")
 	os.Exit(1)
 }
 
@@ -75,11 +75,11 @@ func getConfigMap(namespace, configMapName string) (map[string]string, error) {
 }
 
 func main() {
-	// check if WITH_CONFIGMAP is set
-	configmap_name := os.Getenv("WITH_CONFIGMAP")
+	// check if WITH_CONFIG is set
+	configmap_name := os.Getenv("WITH_CONFIG")
 
 	if configmap_name == "" {
-		fmt.Println("Error: WITH_CONFIGMAP is not set")
+		fmt.Println("Error: WITH_CONFIG is not set")
 		PrintUsageAndExit()
 	}
 
