@@ -141,9 +141,7 @@ func main() {
 		scanner.Split(bufio.ScanRunes)
 
 		for scanner.Scan() {
-			for scanner.Scan() {
-				fmt.Print(scanner.Text())
-			}
+			fmt.Print(scanner.Text())
 		}
 	}()
 
