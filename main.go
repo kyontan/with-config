@@ -129,7 +129,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stdout)
-		scanner.Split(bufio.ScanBytes)
+		scanner.Split(bufio.ScanRunes)
 		for scanner.Scan() {
 			fmt.Print(scanner.Text())
 		}
@@ -138,7 +138,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
-		scanner.Split(bufio.ScanBytes)
+		scanner.Split(bufio.ScanRunes)
 
 		for scanner.Scan() {
 			for scanner.Scan() {
