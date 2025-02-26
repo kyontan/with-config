@@ -75,13 +75,13 @@ func main() {
 	configmap_name := os.Getenv("WITH_CONFIG")
 
 	if configmap_name == "" {
-		fmt.Fprintln(os.Stderr, "Error: WITH_CONFIG is not set")
+		fmt.Fprintln(os.Stderr, "[with-config] Error: WITH_CONFIG is not set")
 		PrintUsageAndExit()
 	}
 
 	// check if command is provided
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "Error: command is not provided")
+		fmt.Fprintln(os.Stderr, "[with-config] Error: command is not provided")
 		PrintUsageAndExit()
 	}
 
@@ -90,7 +90,7 @@ func main() {
 
 	configmap_data, err := getConfigMap(namespace, configmap_name)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error fetching ConfigMap: %+v\n", err)
+		fmt.Fprintf(os.Stderr, "[with-config] Error fetching ConfigMap: %+v\n", err)
 		os.Exit(1)
 	}
 
@@ -108,18 +108,18 @@ func main() {
 
 	stdout, err := command.StdoutPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: unable to get stdout pipe: %+v\n", err)
+		fmt.Fprintf(os.Stderr, "[with-config] Error: unable to get stdout pipe: %+v\n", err)
 		os.Exit(1)
 	}
 
 	stderr, err := command.StderrPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: unable to get stderr pipe: %+v\n", err)
+		fmt.Fprintf(os.Stderr, "[with-config] Error: unable to get stderr pipe: %+v\n", err)
 		os.Exit(1)
 	}
 
 	if err := command.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: unable to start command: %+v\n", err)
+		fmt.Fprintf(os.Stderr, "[with-config] Error: unable to start command: %+v\n", err)
 		os.Exit(1)
 	}
 
@@ -150,7 +150,7 @@ func main() {
 	wg.Wait()
 
 	if err := command.Wait(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: command execution failed: %+v\n", err)
+		fmt.Fprintf(os.Stderr, "[with-config] Error: command execution failed: %+v\n", err)
 		os.Exit(1)
 	}
 }
