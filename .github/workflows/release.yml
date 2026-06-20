@@ -17,7 +17,7 @@ jobs:
         goos: [linux, darwin]
         goarch: [amd64, arm64]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Fetch go version from go.mod
       id: go-version
       run: echo version=$(cat go.mod | grep '^go ' | awk '{print $2}') >> $GITHUB_OUTPUT
